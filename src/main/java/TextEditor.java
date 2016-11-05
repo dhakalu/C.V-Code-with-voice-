@@ -1,6 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-
+import java.awt.event.ActionEvent;
 
 
 public class TextEditor extends JFrame {
@@ -14,6 +14,7 @@ public class TextEditor extends JFrame {
     private boolean changed = false;
 
     private final Action New;
+    private final Action Open;
     private final Action Save;
     private final Action SaveAs;
 
@@ -65,13 +66,37 @@ public class TextEditor extends JFrame {
 
         fileChooser = new JFileChooser();
 
-        New = null;
+        New = new AbstractAction("New") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        Save = null;
-        SaveAs = null;
+            }
+        };
+
+        Open = new AbstractAction("Open") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
+
+        Save = new AbstractAction("Save") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
+
+        SaveAs = new AbstractAction("Save As") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
 
 
         fileMenu.add(New);
+        fileMenu.add(Open);
         fileMenu.add(Save);
         fileMenu.add(SaveAs);
 
