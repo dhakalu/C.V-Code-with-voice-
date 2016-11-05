@@ -5,10 +5,12 @@ import java.awt.*;
 
 public class TextEditor extends JFrame {
 
-
-
-
     private String currentFile = "Untitled";
+
+    /**
+     * This is the variable that keeps track of weather the text was modified
+     *
+     */
     private boolean changed = false;
 
     private final Action New;
@@ -31,8 +33,6 @@ public class TextEditor extends JFrame {
 
 
     public TextEditor(){
-
-
 
 
         terminalArea =  new JTextArea(20, 120);
