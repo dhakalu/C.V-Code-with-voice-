@@ -22,6 +22,11 @@ public class TextEditor extends JFrame {
     private final Action Save;
     private final Action SaveAs;
 
+    private final Action Cut;
+    private final Action Copy;
+    private final Action Paste;
+
+
     private JTextArea editArea = new JTextArea(20,120);
 
     private JTextArea terminalArea;
@@ -98,11 +103,35 @@ public class TextEditor extends JFrame {
             }
         };
 
+        Cut = new AbstractAction("Cut") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
+
+        Copy = new AbstractAction("Copy") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
+
+        Paste = new AbstractAction("Paste") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        };
 
         fileMenu.add(New);
         fileMenu.add(Open);
         fileMenu.add(Save);
         fileMenu.add(SaveAs);
+
+        editMenu.add(Cut);
+        editMenu.add(Copy);
+        editMenu.add(Paste);
 
 
         toolBar = new JToolBar("Sample Button");
