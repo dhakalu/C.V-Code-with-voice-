@@ -1,6 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 
 public class TextEditor extends JFrame {
@@ -69,14 +73,14 @@ public class TextEditor extends JFrame {
         New = new AbstractAction("New") {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                new TextEditor();
             }
         };
 
         Open = new AbstractAction("Open") {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                openFile();
             }
         };
 
@@ -117,6 +121,25 @@ public class TextEditor extends JFrame {
         pack();
         setVisible(true);
 
+    }
+
+
+
+    private void openFile() {
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+            readInFile(fileChooser.getSelectedFile().getAbsolutePath(), editArea);
+    }
+
+    private void readInFile(String absolutePath, JTextArea editArea) {
+        try {
+            FileReader fileReader = new FileReader(new File(absolutePath));
+            editArea.read(fileReader, null);
+            fileReader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
