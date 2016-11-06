@@ -1,6 +1,7 @@
 import edu.cmu.sphinx.api.Configuration;
 import edu.cmu.sphinx.api.LiveSpeechRecognizer;
-import org.json.JSONException;
+import org.apache.http.client.utils.URIBuilder;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -12,10 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+
 
 
 public class TextEditor extends JFrame {
@@ -44,8 +45,9 @@ public class TextEditor extends JFrame {
 
 
     private JTextArea editArea = new JTextArea(20,120);
-
     private JTextArea terminalArea;
+    private JTextArea stackOverFlowArea;
+    private JTextArea stackOverFlowInput;
 
     private JMenuBar menuBar;
     private JToolBar toolBar;
@@ -69,6 +71,7 @@ public class TextEditor extends JFrame {
         Border border = BorderFactory.createLineBorder(Color.DARK_GRAY, 20);
         terminalArea.setBorder(border);
         terminalArea.setMargin( new Insets(10,10,10,10) );
+        //terminalArea.setCaretColor(new Color());
 
 
         terminalArea.addKeyListener(new KeyListener() {
@@ -107,8 +110,12 @@ public class TextEditor extends JFrame {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
-
+        scrollPane.setVisible(true);
+        add(scrollPane);
         editArea.setBorder(border);
+        editArea.setLineWrap(true);
+        editArea.setWrapStyleWord(true);
+
         terminalArea.setMargin(new Insets(10, 10, 10, 10));
 
 
@@ -116,6 +123,28 @@ public class TextEditor extends JFrame {
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS
         );
+
+        add(scrollPaneForTerminal);
+
+
+        stackOverFlowArea = new JTextArea();
+        stackOverFlowArea.setEditable(false);
+        stackOverFlowArea.setBorder(border);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        stackOverFlowArea.setMaximumSize(new Dimension(screenSize.width/2 -100, screenSize.height/2 -100));
+        // stackOverFlowArea.setLineWrap(true);
+        stackOverFlowArea.setFont(new Font("Serif", Font.BOLD, 18));
+
+        add(stackOverFlowArea);
+
+
+        editArea.setSize(screenSize.width/2 -50, screenSize.height/2 -50 );
+
+        JScrollPane scrollPaneForStackOverflow = new JScrollPane(stackOverFlowArea,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+
 
         fileMenu = new JMenu("File");
         fileMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
@@ -212,14 +241,13 @@ public class TextEditor extends JFrame {
 
         add(editArea);
         add(terminalArea, BorderLayout.SOUTH);
+        add(stackOverFlowArea, BorderLayout.EAST);
         add(toolBar, BorderLayout.NORTH);
         setJMenuBar(menuBar);
         setTitle(currentFile);
         // setSize(500, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         // pack();
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(0,0,screenSize.width, screenSize.height);
         setVisible(true);
 
@@ -315,27 +343,36 @@ public class TextEditor extends JFrame {
 
 
     private void executeCommand(String command){
-        Process p;
-        String s;
 
-        try {
-            p = Runtime.getRuntime().exec(command);
+        if (command.startsWith("search")){
+            command.replaceAll("search", "");
+            getOverflowData(command);
+        } else if (command.trim().equals("clear")) {
+            terminalArea.setText("");
+        } else {
 
-            BufferedReader bufferedReader = new BufferedReader(
-                    new InputStreamReader(p.getInputStream())
-            );
-            while ((s = bufferedReader.readLine()) != null){
-                terminalArea.append("\n" + s);
+            Process p;
+            String s;
+
+            try {
+                p = Runtime.getRuntime().exec(command);
+
+                BufferedReader bufferedReader = new BufferedReader(
+                        new InputStreamReader(p.getInputStream())
+                );
+                while ((s = bufferedReader.readLine()) != null){
+                    terminalArea.append("\n" + s);
+                }
+                terminalArea.append("\n");
+                p.waitFor();
+                p.destroy();
+            } catch (IOException e) {
+                terminalArea.append(e.getMessage());
+            } catch (InterruptedException e) {
+                terminalArea.append(e.getMessage());
             }
-            terminalArea.append("\n");
-            p.waitFor();
-            p.destroy();
-        } catch (IOException e) {
-            terminalArea.append(e.getMessage());
-        } catch (InterruptedException e) {
-            terminalArea.append(e.getMessage());
-        }
 
+        }
     }
 
 
@@ -377,47 +414,33 @@ public class TextEditor extends JFrame {
 
 
 
-    public void getOverflowData(){
-        String urlString = "https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=activity&q=while%20loop%20java&site=stackoverflow";
-        URL url = null;
+    public void getOverflowData(String query){
+        resetStackOverflowResultArea();
+        final String baseUrl = "https://api.stackexchange.com/2.2/search/advanced";
+        URI uriBuilder = null;
         try {
-            url = new URL(urlString);
-            URLConnection conn = url.openConnection();
-            InputStream is = conn.getInputStream();
-            JSONObject jsonObject = getJsonObject(is);
-            StringWriter writer = new StringWriter();
-           // IOUtils.copy(inputStream, writer, encoding);
-            String theString = writer.toString();
-            System.out.println(jsonObject.toString());
-        } catch (MalformedURLException e) {
+            uriBuilder = new URIBuilder(baseUrl)
+                    .addParameter("order", "desc")
+                    .addParameter("sort", "activity")
+                    .addParameter("site", "stackoverflow")
+                    .addParameter("q", query)
+                    .build();
+        } catch (URISyntaxException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        System.out.println(uriBuilder.toString());
+        JSONObject overflowResponse = new HttpUtils().getJSON(uriBuilder.toString());
+        JSONArray items = overflowResponse.getJSONArray("items");
+
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject currentQuestion = items.getJSONObject(i);
+            System.out.println(currentQuestion.getString("title"));
+            stackOverFlowArea.append("\n" + currentQuestion.getString("title") + "\n");
         }
     }
 
-    private JSONObject getJsonObject(InputStream is){
-        try {
-            BufferedReader streamReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-            StringBuilder responseStrBuilder = new StringBuilder();
-
-            String inputStr;
-            while ((inputStr = streamReader.readLine()) != null)
-                responseStrBuilder.append(inputStr);
-
-            JSONObject jsonObject = new JSONObject(responseStrBuilder.toString());
-
-            //returns the json object
-            return jsonObject;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        //if something went wrong, return null
-        return null;
+    private void resetStackOverflowResultArea(){
+        stackOverFlowArea.setText("");
     }
 
 

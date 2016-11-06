@@ -5,6 +5,8 @@ public class App {
 
     public static void main(String[] args) {
 
-        new TextEditor();
+        new TextEditor().getOverflowData("java null pointer exception");
+
     }
+
 }
