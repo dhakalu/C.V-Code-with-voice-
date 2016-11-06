@@ -32,11 +32,10 @@
 
     <dependencies>
 
-        <!-- https://mvnrepository.com/artifact/com.ibm.watson.developer_cloud/speech-to-text -->
         <dependency>
-            <groupId>com.ibm.watson.developer_cloud</groupId>
-            <artifactId>speech-to-text</artifactId>
-            <version>3.5.0</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.1.1</version>
         </dependency>
 
         <dependency>
@@ -50,6 +49,15 @@
             <artifactId>sphinx4-core</artifactId>
             <version>5prealpha-SNAPSHOT</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>edu.cmu.sphinx</groupId>
+            <artifactId>sphinx4-data</artifactId>
+            <version>5prealpha-SNAPSHOT</version>
+        </dependency>
+
+
 
     </dependencies>
 </project>

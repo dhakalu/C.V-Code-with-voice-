@@ -1,0 +1,21 @@
+open 
+save 
+save as
+forward
+backward
+next 
+next line
+define a variable
+create a class
+create a method
+create main method
+new
+define a int x  with value x
+string
+public
+private
+double
+for
+while
+for i from 1 to 10
+print hello 
