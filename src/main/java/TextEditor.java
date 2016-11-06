@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 
 public class TextEditor extends JFrame {
 
+
     private String currentFile = "Untitled";
 
     /**
@@ -27,6 +29,7 @@ public class TextEditor extends JFrame {
      */
     private boolean changed = false;
 
+    private final Action About;
     private final Action New;
     private final Action Open;
     private final Action Save;
@@ -35,6 +38,7 @@ public class TextEditor extends JFrame {
     private final Action Cut;
     private final Action Copy;
     private final Action Paste;
+    private final Action CheckForUpdates;
 
     private final Action Record;
 
@@ -156,10 +160,12 @@ public class TextEditor extends JFrame {
             }
         };
 
+
+
         Save = new AbstractAction("Save") {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                previous();
             }
         };
 
@@ -170,26 +176,26 @@ public class TextEditor extends JFrame {
             }
         };
 
-        Cut = new AbstractAction("Cut") {
+        About = new AbstractAction("About") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AboutPop aboutWin = new AboutPop();
+
+            }
+        };
+
+        CheckForUpdates = new AbstractAction("Check For Updates") {
             @Override
             public void actionPerformed(ActionEvent e) {
 
             }
         };
 
-        Copy = new AbstractAction("Copy") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        ActionMap map = editArea.getActionMap();
+        Cut = map.get(DefaultEditorKit.cutAction);
+        Copy = map.get(DefaultEditorKit.copyAction);
+        Paste = map.get(DefaultEditorKit.pasteAction);
 
-            }
-        };
-
-        Paste = new AbstractAction("Paste") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        };
 
         fileMenu.add(New);
         fileMenu.add(Open);
@@ -330,6 +336,43 @@ public class TextEditor extends JFrame {
             terminalArea.append(e.getMessage());
         }
 
+    }
+
+
+
+    private void forward() {
+        int currPos = editArea.getCaretPosition();
+        if (currPos != editArea.getDocument().getLength()) { editArea.setCaretPosition(currPos + 1); };
+    }
+    private void backward() {
+        int currPos = editArea.getCaretPosition();
+        if (currPos != 0) editArea.setCaretPosition(currPos - 1);
+    }
+
+    private void next() {
+        int currPos = editArea.getCaretPosition();
+        while ((editArea.getText().charAt(currPos)) != ' ') {
+            if (currPos == editArea.getDocument().getLength()) {
+                return;
+            }
+            currPos += 1;
+        }
+        editArea.setCaretPosition(currPos + 1);
+    }
+    private void previous() {
+        int currPos = editArea.getCaretPosition();
+        int spaceCount = 0;
+        while (spaceCount <2) {
+            if (currPos == 0) {
+                editArea.setCaretPosition(0);
+                return;
+            }
+            if ((editArea.getText().charAt(currPos - 1)) == ' ') {
+                spaceCount += 1;
+            }
+            currPos -= 1;
+        }
+        editArea.setCaretPosition(currPos + 1);
     }
 
 
