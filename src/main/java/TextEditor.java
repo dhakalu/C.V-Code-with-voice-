@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
@@ -44,10 +43,9 @@ public class TextEditor extends JFrame {
     private final Action Record;
 
 
-    private JTextArea editArea = new JTextArea(20,120);
+    private JTextArea editArea; //= new JTextArea(20,120);
     private JTextArea terminalArea;
     private JTextArea stackOverFlowArea;
-    private JTextArea stackOverFlowInput;
 
     private JMenuBar menuBar;
     private JToolBar toolBar;
@@ -66,13 +64,61 @@ public class TextEditor extends JFrame {
 
     public TextEditor(){
 
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension dim = tk.getScreenSize();
+        setSize(dim);
+        int xPos = (dim.width / 2) - (this.getWidth() / 2);
+        int yPos = (dim.height / 2) - (this.getHeight() / 2);
+        this.setLocation(xPos, yPos);
+        this.setResizable(false);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        terminalArea =  new JTextArea(20, 120);
-        Border border = BorderFactory.createLineBorder(Color.DARK_GRAY, 20);
-        terminalArea.setBorder(border);
-        terminalArea.setMargin( new Insets(10,10,10,10) );
-        //terminalArea.setCaretColor(new Color());
+        JPanel pane = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
 
+
+        editArea = new JTextArea(23, 105);
+        //editArea.setFont(new Font("Serif", Font.PLAIN, 23));
+        editArea.setLineWrap(true);
+
+        terminalArea = new JTextArea(20, 52);
+        terminalArea.setLineWrap(true);
+
+        stackOverFlowArea = new JTextArea(20,52);
+        stackOverFlowArea.setEditable(false);
+        stackOverFlowArea.setText("stackOverflow Area");
+        stackOverFlowArea.setLineWrap(true);
+        stackOverFlowArea.setWrapStyleWord(true);
+
+
+        JScrollPane editorScrollPane = new JScrollPane(editArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridwidth = 2;
+        pane.add(editorScrollPane, c);
+
+
+        JScrollPane terminalScrollPane = new JScrollPane(terminalArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weightx = 0.5;
+        c.gridwidth=1;
+        pane.add(terminalScrollPane, c);
+
+        c.gridx = 1;
+        c.gridy = 1;
+        c.weightx = 0.5;
+
+
+        JScrollPane stackOverFlowScrollPane = new JScrollPane(stackOverFlowArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        pane.add(stackOverFlowScrollPane, c);
+
+        add(pane);
+        setVisible(true);
 
         terminalArea.addKeyListener(new KeyListener() {
             @Override
@@ -105,73 +151,15 @@ public class TextEditor extends JFrame {
             }
         });
 
-        editArea.setFont(new Font("Serif", Font.PLAIN, 20));
-        JScrollPane scrollPane = new JScrollPane(editArea,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-        );
-        scrollPane.setVisible(true);
-        add(scrollPane);
-        editArea.setBorder(border);
-        editArea.setLineWrap(true);
-        editArea.setWrapStyleWord(true);
-
-        terminalArea.setMargin(new Insets(10, 10, 10, 10));
-
-
-        JScrollPane scrollPaneForTerminal = new JScrollPane(terminalArea,
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS
-        );
-
-        add(scrollPaneForTerminal);
-
-
-        stackOverFlowArea = new JTextArea();
-        stackOverFlowArea.setEditable(false);
-        stackOverFlowArea.setBorder(border);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        stackOverFlowArea.setMaximumSize(new Dimension(screenSize.width/2 -100, screenSize.height/2 -100));
-        // stackOverFlowArea.setLineWrap(true);
-        stackOverFlowArea.setFont(new Font("Serif", Font.BOLD, 18));
-
-        add(stackOverFlowArea);
-
-
-        editArea.setSize(screenSize.width/2 -50, screenSize.height/2 -50 );
-
-        JScrollPane scrollPaneForStackOverflow = new JScrollPane(stackOverFlowArea,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-
-
-        fileMenu = new JMenu("File");
-        fileMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
-
-
-        editMenu = new JMenu("Edit");
-        editMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
-
-
-        helpMenu = new JMenu("Help");
-        helpMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
-
-
-        menuBar = new JMenuBar();
-        menuBar.add(fileMenu);
-        menuBar.add(editMenu);
-        menuBar.add(helpMenu);
-        menuBar.setBorderPainted(false);
-        menuBar.setFont(new Font("Serif", Font.PLAIN, 20));
-
-
-        fileChooser = new JFileChooser();
-
         Record = new AbstractAction("Record") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                startRecording();
+                if (isRecording){
+                    isRecording = false;
+                    recognizer.stopRecognition();
+                } else {
+                    startRecording();
+                }
             }
         };
 
@@ -194,7 +182,7 @@ public class TextEditor extends JFrame {
         Save = new AbstractAction("Save") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                previous();
+                prevLine();
             }
         };
 
@@ -212,6 +200,29 @@ public class TextEditor extends JFrame {
 
             }
         };
+
+
+        fileMenu = new JMenu("File");
+        fileMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
+
+
+        editMenu = new JMenu("Edit");
+        editMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
+
+
+        helpMenu = new JMenu("Help");
+        helpMenu.setFont(new Font("Monospace", Font.PLAIN, 20));
+        helpMenu.add(About);
+
+        menuBar = new JMenuBar();
+        menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+        menuBar.add(helpMenu);
+        menuBar.setBorderPainted(false);
+        menuBar.setFont(new Font("Serif", Font.PLAIN, 20));
+
+
+        fileChooser = new JFileChooser();
 
         CheckForUpdates = new AbstractAction("Check For Updates") {
             @Override
@@ -235,21 +246,17 @@ public class TextEditor extends JFrame {
         editMenu.add(Copy);
         editMenu.add(Paste);
 
+        editMenu.getItem(0).setText("Cut");
+        editMenu.getItem(1).setText("Copy");
+        editMenu.getItem(2).setText("Paste");
 
         toolBar = new JToolBar("Sample Button");
         toolBar.add(Record);
 
-        add(editArea);
-        add(terminalArea, BorderLayout.SOUTH);
-        add(stackOverFlowArea, BorderLayout.EAST);
         add(toolBar, BorderLayout.NORTH);
         setJMenuBar(menuBar);
         setTitle(currentFile);
-        // setSize(500, 400);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        // pack();
-        setBounds(0,0,screenSize.width, screenSize.height);
-        setVisible(true);
+
 
         createCommandMap();
 
@@ -261,7 +268,6 @@ public class TextEditor extends JFrame {
         mapOfCommands.put("create a method", "\n public void doSomething() {\n }");
         mapOfCommands.put("create main method", "\n public static void main(String[] args) {\n }");
     }
-
 
     private void openFile() {
         if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
@@ -282,11 +288,12 @@ public class TextEditor extends JFrame {
 
 
     private void startRecording(){
+        isRecording = true;
         terminalArea.append("Starting to record");
         Configuration configuration = new Configuration();
         configuration.setAcousticModelPath("resource:/edu/cmu/sphinx/models/en-us/en-us");
-        configuration.setDictionaryPath("file:0850.dic");
-        configuration.setLanguageModelPath("file:0850.lm");
+        configuration.setDictionaryPath("file:7563.dic");
+        configuration.setLanguageModelPath("file:7563.lm");
         try {
             recognizer = new LiveSpeechRecognizer(configuration);
         } catch (IOException e) {
@@ -307,26 +314,36 @@ public class TextEditor extends JFrame {
             System.out.println("Say something. Say Stop Recording to stop!");
             while (true) {
                 String result = recognizer.getResult().getHypothesis().toLowerCase();
-                if (result.startsWith("stop")){
+                System.out.println(result);
+                if (result.startsWith("stop")) {
                     break;
-                } else if (result.equals("create a method")){
-                    System.out.println(result);
-                    editArea.append("\n public void printHelloWorld() { \n }");
-                }  else if (result.equals("create main method")){
-                    System.out.println(result);
-                    editArea.append("\n public static void main(String[] args) { \n }");
-                } else if (result.equals("create a class")){
-                    System.out.println(result);
+                } else if (result.equals("create a method")) {
+                    editArea.insert("\n public void printHelloWorld() { \n  \n}", editArea.getCaretPosition());
+                } else if (result.equals("create main method")) {
+                    editArea.insert("\n public static void main(String[] args) { \n }", editArea.getCaretPosition());
+                } else if (result.equals("create a class")) {
                     editArea.insert("\n public class HelloWorld { \n }", editArea.getCaretPosition());
-                } else if(result.startsWith("print")){
+                } else if (result.startsWith("print")) {
+                    String[] array = result.split(" ");
                     System.out.println(result);
-                    result.replaceAll("print", "");
-                    editArea.insert("\n System.out.println(\" " + result    + "  \")", editArea.getCaretPosition());
-                } else if (result.equals("open")){
+                    editArea.insert("\n System.out.println(\" " +  array[1] + "  \");", editArea.getCaretPosition());
+                } else if (result.equals("open")) {
                     openFile();
+                } else if(result.equals("forward")){
+                    forward();
+                } else if (result.equals("indent")) {
+                    editArea.insert("\t", editArea.getCaretPosition());
+                } else if (result.equals("backward")){
+                    backward();
+                } else  if (result.equals("previous")){
+                    previous();
+                } else if (result.equals("next line")) {
+                    nextLine();
+                } else if (result.equals("next")){
+                    next();
                 } else {
                     System.out.println(result);
-                    editArea.append(result);
+                    terminalArea.append(result + " ");
                 }
             }
             return null;
@@ -341,12 +358,38 @@ public class TextEditor extends JFrame {
     };
 
 
+    private void nextLine() {
+        int currPos = editArea.getCaretPosition();
+        if (currPos == editArea.getDocument().getLength()) return;
+        while (editArea.getText().charAt(currPos) != '\n') {
+            if (currPos == editArea.getDocument().getLength() - 1) return;
+            currPos += 1;
+        }
+        editArea.setCaretPosition(currPos + 1);
+    }
+    private void prevLine() {
+        int currPos = editArea.getCaretPosition();
+        int newLineCount = 0;
+        while (newLineCount < 2) {
+            if (currPos == 0) {
+                editArea.setCaretPosition(currPos);
+                return;
+            }
+            if ((editArea.getText().charAt(currPos - 1)) == '\n') {
+                newLineCount += 1;
+            }
+            currPos -= 1;
+        }
+        editArea.setCaretPosition(currPos + 1);
+    }
+
+
 
     private void executeCommand(String command){
 
         if (command.startsWith("search")){
-            command.replaceAll("search", "");
-            getOverflowData(command);
+            String query = command.substring("search".length());
+            getOverflowData(query);
         } else if (command.trim().equals("clear")) {
             terminalArea.setText("");
         } else {
